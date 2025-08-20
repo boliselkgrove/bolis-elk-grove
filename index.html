@@ -5,15 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Bolis Elk Grove Orders</title>
   <style>
-    body { font-family:sans-serif; background:#f8f4f0; padding:1rem }
-    .container { max-width:480px; margin:auto; background:#fff; padding:1.5rem; border-radius:8px }
-    h1 { text-align:center; color:#e63946 }
-    label { display:block; margin:0.5rem 0 0.25rem }
-    input, select, button, textarea { width:100%; padding:0.5rem; margin-bottom:0.75rem; border:1px solid #ccc; border-radius:4px }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:1rem }
-    .total { font-weight:bold; text-align:right; margin-bottom:1rem }
-    button { background:#e63946; color:#fff; border:none; cursor:pointer }
-    button:disabled { opacity:0.6; cursor:not-allowed }
+    body { font-family:sans-serif; background:#f8f4f0; padding:1rem; }
+    .container { max-width:480px; margin:auto; background:#fff; padding:1.5rem; border-radius:8px; }
+    h1 { text-align:center; color:#e63946; }
+    h2 { margin-top:1.5rem; color:#333; }
+    label { display:block; margin:0.5rem 0 0.25rem; }
+    input, select, button, textarea { width:100%; padding:0.5rem; margin-bottom:0.75rem; border:1px solid #ccc; border-radius:4px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:1rem; }
+    .total { font-weight:bold; text-align:right; margin:1rem 0; }
+    .warning { color:#b00020; margin-bottom:1rem; }
+    button { background:#e63946; color:#fff; border:none; cursor:pointer; }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
+    .bundle-options label { display:inline-block; margin-right:1rem; cursor:pointer; }
+    .bundle-options input { margin-right:0.25rem; }
   </style>
 </head>
 <body>
@@ -32,21 +36,33 @@
       <label for="slot">Pickup Slot (6 AM–11 PM)</label>
       <input id="slot" name="slot" type="time" min="06:00" max="23:00" required>
 
-      <!-- Flavor Inputs -->
-      <label>Flavors (up to stock)</label>
+      <!-- Bundle Deals -->
+      <h2>Bundle Deals</h2>
+      <div class="bundle-options" id="bundleOptions">
+        <label><input type="radio" name="bundle" value="12">1 Dozen ($32)</label>
+        <label><input type="radio" name="bundle" value="24">2 Dozen ($60)</label>
+        <label><input type="radio" name="bundle" value="36">3 Dozen ($84)</label>
+        <label><input type="radio" name="bundle" value="48">4 Dozen ($104)</label>
+        <label><input type="radio" name="bundle" value="100">100-Pack ($200)</label>
+        <label><input type="radio" name="bundle" value="custom" checked>Custom</label>
+      </div>
+
+      <!-- Flavors -->
+      <h2>Choose Flavors</h2>
+      <div id="bundleWarning" class="warning"></div>
       <div id="flavorGrid" class="grid"></div>
 
-      <!-- Special instructions -->
+      <!-- Special Instructions -->
       <label for="notes">Special Instructions (optional)</label>
       <textarea id="notes" name="notes" rows="2"></textarea>
 
+      <!-- Payment Method -->
       <label for="payment">Payment Method</label>
       <select id="payment" name="payment" required>
         <option>Cash on Pickup</option>
-        <!-- Apple Pay will come later -->
       </select>
 
-      <!-- Hidden fields for summary & total -->
+      <!-- Hidden summary & total for Formspree -->
       <input type="hidden" name="order_summary" id="order_summary">
       <input type="hidden" name="order_total"   id="order_total">
 
