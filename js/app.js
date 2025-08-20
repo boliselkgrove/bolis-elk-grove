@@ -1,4 +1,6 @@
-// === CONFIG: Flavors + Stock + Bundle Pricing ===
+// =============================================================================
+// CONFIG: Flavors + Stock + Bundle Pricing
+// =============================================================================
 const FLAVORS = [
   { name:'Mango',        stock:50 },
   { name:'Mango Chili',  stock:30 },
@@ -19,21 +21,25 @@ const BUNDLES = [
   { qty: 12, price: 32 },
   { qty:  1, price:  3 }
 ];
-// ===============================================
+// =============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-  const form        = document.getElementById('orderForm');
-  const grid        = document.getElementById('flavorGrid');
-  const displayTotal= document.getElementById('displayTotal');
-  const hiddenSum   = document.getElementById('order_summary');
-  const hiddenTot   = document.getElementById('order_total');
-  const submitBtn   = document.getElementById('submitBtn');
+  const form          = document.getElementById('orderForm');
+  const grid          = document.getElementById('flavorGrid');
+  const bundleWarning = document.getElementById('bundleWarning');
+  const displayTotal  = document.getElementById('displayTotal');
+  const hiddenSum     = document.getElementById('order_summary');
+  const hiddenTot     = document.getElementById('order_total');
+  const submitBtn     = document.getElementById('submitBtn');
+  const bundleRadios  = document.getElementsByName('bundle');
 
-  // 1) Build the flavor input grid
+  // 1) Render flavor inputs
   FLAVORS.forEach(flavor => {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = `
-      <label for="flavor-${flavor.name}">${flavor.name} (in stock: ${flavor.stock})</label>
+      <label for="flavor-${flavor.name}">
+        ${flavor.name} (stock: ${flavor.stock})
+      </label>
       <input
         id="flavor-${flavor.name}"
         name="${flavor.name}"
@@ -47,46 +53,94 @@ document.addEventListener('DOMContentLoaded', () => {
     grid.appendChild(wrapper);
   });
 
-  // 2) Recalculate summary + total whenever any flavor changes
+  // 2) Recalculate on any input or bundle change
   grid.addEventListener('input', recalc);
-  recalc(); // initial calculation
+  bundleRadios.forEach(r => r.addEventListener('change', recalc));
+  recalc();
 
-  // 3) On submit, ensure at least one bolis
+  // 3) Validate on submit
   form.addEventListener('submit', e => {
-    if (parseInt(hiddenTot.value) === 0) {
+    const totalItems = getTotalItems();
+    const bundleVal  = getSelectedBundle();
+    if (bundleVal !== 'custom') {
+      if (totalItems !== parseInt(bundleVal)) {
+        e.preventDefault();
+        alert(`Please select exactly ${bundleVal} Bolis for this bundle.`);
+      }
+    } else if (totalItems === 0) {
       e.preventDefault();
-      alert('Please select at least one bolis flavor.');
+      alert('Please select at least one Bolis flavor.');
     }
-    // otherwise let Formspree handle the POST
+    // otherwise allow form POST to Formspree
   });
 
   // ===== Helper Functions =====
-  function recalc() {
-    const counts = {};
-    FLAVORS.forEach(f => {
+
+  function getSelectedBundle() {
+    const checked = [...bundleRadios].find(r => r.checked);
+    return checked ? checked.value : 'custom';
+  }
+
+  function getTotalItems() {
+    return FLAVORS.reduce((sum, f) => {
       const val = parseInt(
         document.getElementById(`flavor-${f.name}`).value
       ) || 0;
-      if (val > 0) counts[f.name] = val;
-    });
-
-    // Build summary lines
-    const lines = Object.entries(counts)
-      .map(([flavor, qty]) => `${flavor}: ${qty}`);
-    hiddenSum.value = lines.join('\n') || 'None';
-
-    // Calculate bundle pricing
-    hiddenTot.value = calculateTotal(counts);
-    displayTotal.textContent = `Total: $${hiddenTot.value}`;
+      return sum + val;
+    }, 0);
   }
 
-  function calculateTotal(orderCounts) {
-    let remaining = Object.values(orderCounts)
-                          .reduce((sum, v) => sum + v, 0);
+  function recalc() {
+    const totalItems  = getTotalItems();
+    const bundleVal   = getSelectedBundle();
+    let totalPrice    = 0;
+    let warningText   = '';
+
+    if (bundleVal !== 'custom') {
+      const bundleQty   = parseInt(bundleVal);
+      const bundlePrice = BUNDLES.find(b => b.qty === bundleQty)?.price || 0;
+
+      if (totalItems > bundleQty) {
+        warningText = `You’ve selected ${totalItems}, which exceeds this bundle of ${bundleQty}.`;
+        submitBtn.disabled = true;
+      }
+      else if (totalItems < bundleQty) {
+        warningText = `Select ${bundleQty - totalItems} more Bolis to fill this bundle.`;
+        submitBtn.disabled = true;
+      }
+      else {
+        warningText = '';
+        submitBtn.disabled = false;
+      }
+      totalPrice = bundlePrice;
+    }
+    else {
+      // custom: apply best-price bundle algorithm
+      totalPrice = calculateCustomPrice(totalItems);
+      warningText = '';
+      submitBtn.disabled = totalItems === 0;
+    }
+
+    // Build summary lines
+    const lines = FLAVORS.map(f => {
+      const qty = parseInt(
+        document.getElementById(`flavor-${f.name}`).value
+      ) || 0;
+      return qty > 0 ? `${f.name}: ${qty}` : null;
+    }).filter(Boolean);
+
+    hiddenSum.value = lines.join('\n') || 'None';
+    hiddenTot.value = totalPrice;
+    displayTotal.textContent = `Total: $${totalPrice}`;
+
+    bundleWarning.textContent = warningText;
+  }
+
+  function calculateCustomPrice(totalItems) {
     return BUNDLES.reduce((sum, {qty, price}) => {
-      const bundles = Math.floor(remaining / qty);
+      const bundles = Math.floor(totalItems / qty);
       sum += bundles * price;
-      remaining %= qty;
+      totalItems %= qty;
       return sum;
     }, 0);
   }
