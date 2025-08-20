@@ -72,98 +72,30 @@
   </div>
 
   <!-- EmailJS -->
-  <script src="https://cdn.emailjs.com/sdk/2.3.2/email.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Initialize EmailJS
-      emailjs.init('jNjnwDTehjtDEem4i');
+<script src="https://cdn.emailjs.com/sdk/2.3.2/email.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded');
+    emailjs.init('jNjnwDTehjtDEem4i');
+    console.log('EmailJS initialized');
 
-      // Pricing tiers
-      const priceTiers = [
-        { qty: 100, price: 200 },
-        { qty:  48, price: 104 },
-        { qty:  36, price:  84 },
-        { qty:  24, price:  60 },
-        { qty:  12, price:  32 },
-        { qty:   1, price:   3 }
-      ];
+    const form      = document.getElementById('orderForm');
+    const submitBtn = document.getElementById('submitBtn');
 
-      // Calculate total cost
-      function calculateTotal(orderCounts) {
-        let totalBolis = Object.values(orderCounts).reduce((a, b) => a + b, 0);
-        return priceTiers.reduce((sum, tier) => {
-          const bundles = Math.floor(totalBolis / tier.qty);
-          sum += bundles * tier.price;
-          totalBolis %= tier.qty;
-          return sum;
-        }, 0);
-      }
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      console.log('Submit handler triggered');
 
-      // Form submission
-      const form       = document.getElementById('orderForm');
-      const submitBtn  = document.getElementById('submitBtn');
-      const confirmation = document.getElementById('confirmation');
+      // Basic sanity check: do we have name/email values?
+      const name  = form.customerName.value;
+      const email = form.customerEmail.value;
+      console.log({ name, email });
 
-      form.addEventListener('submit', e => {
-        e.preventDefault();
-        submitBtn.disabled = true;
-
-        const name  = form.customerName.value.trim();
-        const email = form.customerEmail.value.trim();
-        const payment = form.paymentMethod.value;
-        const flavors = form.querySelectorAll('.flavor');
-
-        // Build orderCounts & summary
-        let orderCounts = {}, summaryLines = [];
-        flavors.forEach(f => {
-          const qty = parseInt(f.value) || 0;
-          if (qty > 0) {
-            orderCounts[f.dataset.flavor] = qty;
-            summaryLines.push(`${f.dataset.flavor}: ${qty}`);
-          }
-        });
-
-        // Prevent empty orders
-        if (!summaryLines.length) {
-          alert('Please select at least one bolis flavor.');
-          submitBtn.disabled = false;
-          return;
-        }
-
-        const total = calculateTotal(orderCounts);
-        const summary = summaryLines.join('\n');
-
-        // Template params
-        const params = {
-          customer_name:  name,
-          customer_email: email,
-          order_summary:  summary,
-          order_total:    `$${total}`,
-          payment_method: payment
-        };
-
-        // Send emails
-        Promise.all([
-          emailjs.send('service_os7de1n','template_5plcqxe', params),
-          emailjs.send('service_os7de1n','template_se19j7c', params)
-        ])
-        .then(() => {
-          // Show confirmation
-          form.classList.add('hidden');
-          document.getElementById('confName').textContent  = name;
-          document.getElementById('confEmail').textContent = email;
-          document.getElementById('confTotal').textContent = `$${total}`;
-          confirmation.classList.remove('hidden');
-        })
-        .catch(err => {
-          console.error('EmailJS error:', err);
-          alert('Oops! Something went wrong. Please try again.');
-        })
-        .finally(() => {
-          submitBtn.disabled = false;
-        });
-      });
+      submitBtn.disabled = true;
+      // ...rest of your logic...
     });
-  </script>
+  });
+</script>
+  
 </body>
 </html>
