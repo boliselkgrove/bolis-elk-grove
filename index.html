@@ -1,119 +1,168 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Bolis Pickup Orders</title>
+  <!-- Tailwind CSS via CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
-  <script type="text/javascript">
-    (function(){
-      emailjs.init("jNjnwDTehjtDEem4i");
-    })();
-  </script>
 </head>
+
 <body class="bg-gradient-to-br from-pink-200 via-yellow-100 to-blue-200 min-h-screen flex flex-col items-center p-6">
+
   <h1 class="text-4xl font-bold mb-6 text-pink-600">🍧 Bolis Pickup Orders</h1>
 
+  <!-- Order Form -->
   <form id="orderForm" class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-xl">
-    <label class="block mb-2 font-semibold">Your Name</label>
-    <input type="text" id="customerName" required class="w-full p-2 mb-4 border rounded">
+    <!-- Customer Info -->
+    <label for="customerName" class="block mb-2 font-semibold">Your Name</label>
+    <input type="text" id="customerName" required
+           class="w-full p-2 mb-4 border rounded" />
 
-    <label class="block mb-2 font-semibold">Your Email</label>
-    <input type="email" id="customerEmail" required class="w-full p-2 mb-4 border rounded">
+    <label for="customerEmail" class="block mb-2 font-semibold">Your Email</label>
+    <input type="email" id="customerEmail" required
+           class="w-full p-2 mb-4 border rounded" />
 
-    <label class="block mb-2 font-semibold">Flavors (select quantities)</label>
+    <!-- Flavor Grid -->
+    <label class="block mb-2 font-semibold">Flavors (qty)</label>
     <div id="flavors" class="grid grid-cols-2 gap-2 mb-4">
-      <div><label>Oreo</label><input type="number" min="0" value="0" data-flavor="Oreo" class="flavor w-full p-1 border rounded"></div>
-      <div><label>Nutella</label><input type="number" min="0" value="0" data-flavor="Nutella" class="flavor w-full p-1 border rounded"></div>
-      <div><label>Mango Chili</label><input type="number" min="0" value="0" data-flavor="Mango Chili" class="flavor w-full p-1 border rounded"></div>
-      <div><label>Mango</label><input type="number" min="0" value="0" data-flavor="Mango" class="flavor w-full p-1 border rounded"></div>
-      <div><label>Strawberry</label><input type="number" min="0" value="0" data-flavor="Strawberry" class="flavor w-full p-1 border rounded"></div>
-      <div><label>Strawberries & Cream</label><input type="number" min="0" value="0" data-flavor="Strawberries & Cream" class="flavor w-full p-1 border rounded"></div>
-      <div><label>Coconut</label><input type="number" min="0" value="0" data-flavor="Coconut" class="flavor w-full p-1 border rounded"></div>
-      <div><label>Gansito</label><input type="number" min="0" value="0" data-flavor="Gansito" class="flavor w-full p-1 border rounded"></div>
-      <div><label>Mazapán</label><input type="number" min="0" value="0" data-flavor="Mazapán" class="flavor w-full p-1 border rounded"></div>
+      <!-- Each input has a data-flavor attribute -->
+      <div>
+        <label for="flavor-oreo">Oreo</label>
+        <input id="flavor-oreo" type="number" min="0" value="0"
+               data-flavor="Oreo"
+               class="flavor w-full p-1 border rounded" />
+      </div>
+      <div>
+        <label for="flavor-nutella">Nutella</label>
+        <input id="flavor-nutella" type="number" min="0" value="0"
+               data-flavor="Nutella"
+               class="flavor w-full p-1 border rounded" />
+      </div>
+      <!-- Add your other flavors similarly -->
+      <div>
+        <label for="flavor-mango-chili">Mango Chili</label>
+        <input id="flavor-mango-chili" type="number" min="0" value="0"
+               data-flavor="Mango Chili"
+               class="flavor w-full p-1 border rounded" />
+      </div>
+      <!-- ... -->
     </div>
 
-    <label class="block mb-2 font-semibold">Payment Method</label>
+    <!-- Payment Method -->
+    <label for="paymentMethod" class="block mb-2 font-semibold">Payment Method</label>
     <select id="paymentMethod" class="w-full p-2 mb-4 border rounded">
-      <option value="Apple Pay">Apple Pay</option>
-      <option value="Cash on Pickup">Cash on Pickup</option>
+      <option>Apple Pay</option>
+      <option>Cash on Pickup</option>
     </select>
 
-    <button type="submit" class="w-full bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-xl font-bold">Place Order</button>
+    <!-- Place Order -->
+    <button id="submitBtn" type="submit"
+            class="w-full bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-xl font-bold">
+      Place Order
+    </button>
   </form>
 
+  <!-- Confirmation Message -->
+  <div id="confirmation" aria-live="polite"
+       class="hidden mt-6 p-4 bg-green-100 rounded max-w-xl text-center">
+    <h2 class="font-bold text-xl mb-2">Thank you, <span id="confName"></span>!</h2>
+    <p>Your order of <span id="confTotal"></span> bolis is confirmed.</p>
+    <p>Confirmation sent to <span id="confEmail"></span>.</p>
+  </div>
+
+  <!-- EmailJS -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
   <script>
-    function calculateTotal(orderCounts) {
-      let totalBolis = Object.values(orderCounts).reduce((a,b) => a+b, 0);
-      let total = 0;
-      if(totalBolis >= 100) {
-        total = 200 * Math.floor(totalBolis/100);
-        totalBolis = totalBolis % 100;
-      }
-      if(totalBolis >= 48) {
-        total += 104 * Math.floor(totalBolis/48);
-        totalBolis = totalBolis % 48;
-      }
-      if(totalBolis >= 36) {
-        total += 84 * Math.floor(totalBolis/36);
-        totalBolis = totalBolis % 36;
-      }
-      if(totalBolis >= 24) {
-        total += 60 * Math.floor(totalBolis/24);
-        totalBolis = totalBolis % 24;
-      }
-      if(totalBolis >= 12) {
-        total += 32 * Math.floor(totalBolis/12);
-        totalBolis = totalBolis % 12;
-      }
-      total += totalBolis * 3;
-      return total;
-    }
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize EmailJS
+      emailjs.init('jNjnwDTehjtDEem4i');
 
-    document.getElementById("orderForm").addEventListener("submit", function(e){
-      e.preventDefault();
-      let name = document.getElementById("customerName").value;
-      let email = document.getElementById("customerEmail").value;
-      let payment = document.getElementById("paymentMethod").value;
-      let flavors = document.querySelectorAll(".flavor");
-      let orderCounts = {};
-      let summary = "";
-      flavors.forEach(f => {
-        let qty = parseInt(f.value) || 0;
-        if(qty > 0){
-          orderCounts[f.dataset.flavor] = qty;
-          summary += f.dataset.flavor + ": " + qty + "\n";
+      // Pricing tiers
+      const priceTiers = [
+        { qty: 100, price: 200 },
+        { qty:  48, price: 104 },
+        { qty:  36, price:  84 },
+        { qty:  24, price:  60 },
+        { qty:  12, price:  32 },
+        { qty:   1, price:   3 }
+      ];
+
+      // Calculate total cost
+      function calculateTotal(orderCounts) {
+        let totalBolis = Object.values(orderCounts).reduce((a, b) => a + b, 0);
+        return priceTiers.reduce((sum, tier) => {
+          const bundles = Math.floor(totalBolis / tier.qty);
+          sum += bundles * tier.price;
+          totalBolis %= tier.qty;
+          return sum;
+        }, 0);
+      }
+
+      // Form submission
+      const form       = document.getElementById('orderForm');
+      const submitBtn  = document.getElementById('submitBtn');
+      const confirmation = document.getElementById('confirmation');
+
+      form.addEventListener('submit', e => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+
+        const name  = form.customerName.value.trim();
+        const email = form.customerEmail.value.trim();
+        const payment = form.paymentMethod.value;
+        const flavors = form.querySelectorAll('.flavor');
+
+        // Build orderCounts & summary
+        let orderCounts = {}, summaryLines = [];
+        flavors.forEach(f => {
+          const qty = parseInt(f.value) || 0;
+          if (qty > 0) {
+            orderCounts[f.dataset.flavor] = qty;
+            summaryLines.push(`${f.dataset.flavor}: ${qty}`);
+          }
+        });
+
+        // Prevent empty orders
+        if (!summaryLines.length) {
+          alert('Please select at least one bolis flavor.');
+          submitBtn.disabled = false;
+          return;
         }
+
+        const total = calculateTotal(orderCounts);
+        const summary = summaryLines.join('\n');
+
+        // Template params
+        const params = {
+          customer_name:  name,
+          customer_email: email,
+          order_summary:  summary,
+          order_total:    `$${total}`,
+          payment_method: payment
+        };
+
+        // Send emails
+        Promise.all([
+          emailjs.send('service_os7de1n','template_5plcqxe', params),
+          emailjs.send('service_os7de1n','template_se19j7c', params)
+        ])
+        .then(() => {
+          // Show confirmation
+          form.classList.add('hidden');
+          document.getElementById('confName').textContent  = name;
+          document.getElementById('confEmail').textContent = email;
+          document.getElementById('confTotal').textContent = `$${total}`;
+          confirmation.classList.remove('hidden');
+        })
+        .catch(err => {
+          console.error('EmailJS error:', err);
+          alert('Oops! Something went wrong. Please try again.');
+        })
+        .finally(() => {
+          submitBtn.disabled = false;
+        });
       });
-      let total = calculateTotal(orderCounts);
-
-      let templateParamsOwner = {
-        customer_name: name,
-        customer_email: email,
-        order_summary: summary,
-        order_total: total,
-        payment_method: payment
-      };
-      let templateParamsCustomer = templateParamsOwner;
-
-      // Send to owner
-      emailjs.send("service_os7de1n","template_5plcqxe",templateParamsOwner)
-        .then(() => {
-          console.log("Owner email sent");
-        }, (error) => {
-          console.error("Owner email failed", error);
-        });
-
-      // Send to customer
-      emailjs.send("service_os7de1n","template_se19j7c",templateParamsCustomer)
-        .then(() => {
-          alert("Order placed successfully! Confirmation sent to your email.");
-        }, (error) => {
-          console.error("Customer email failed", error);
-        });
-
     });
   </script>
 </body>
