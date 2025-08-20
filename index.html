@@ -2,100 +2,60 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bolis Pickup Orders</title>
-  <!-- Tailwind CSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Bolis Elk Grove Orders</title>
+  <style>
+    body { font-family:sans-serif; background:#f8f4f0; padding:1rem; }
+    .container { max-width:480px; margin:auto; background:#fff; padding:1.5rem; border-radius:8px; }
+    h1 { text-align:center; color:#e63946; }
+    label { display:block; margin:0.5rem 0 0.25rem; }
+    input, select, button, textarea { width:100%; padding:0.5rem; margin-bottom:0.75rem; border:1px solid #ccc; border-radius:4px; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
+    .total { font-weight:bold; text-align:right; margin:1rem 0; }
+    button { background:#e63946; color:#fff; border:none; cursor:pointer; }
+    button:disabled { opacity:0.6; cursor:not-allowed; }
+  </style>
 </head>
+<body>
 
-<body class="bg-gradient-to-br from-pink-200 via-yellow-100 to-blue-200 min-h-screen flex flex-col items-center p-6">
+  <div class="container">
+    <h1>🍧 Bolis Pickup</h1>
 
-  <h1 class="text-4xl font-bold mb-6 text-pink-600">🍧 Bolis Pickup Orders</h1>
+    <form id="orderForm" action="https://formspree.io/f/mwpqdazz" method="POST">
+      <!-- Customer Info -->
+      <label for="name">Name</label>
+      <input id="name" name="name" type="text" required>
 
-  <!-- Order Form -->
-  <form id="orderForm" class="bg-white shadow-lg rounded-2xl p-6 w-full max-w-xl">
-    <!-- Customer Info -->
-    <label for="customerName" class="block mb-2 font-semibold">Your Name</label>
-    <input type="text" id="customerName" required
-           class="w-full p-2 mb-4 border rounded" />
+      <label for="contact">Phone or Email</label>
+      <input id="contact" name="contact" type="text" required>
 
-    <label for="customerEmail" class="block mb-2 font-semibold">Your Email</label>
-    <input type="email" id="customerEmail" required
-           class="w-full p-2 mb-4 border rounded" />
+      <label for="slot">Pickup Slot (6 AM – 11 PM)</label>
+      <input id="slot" name="slot" type="time" min="06:00" max="23:00" required>
 
-    <!-- Flavor Grid -->
-    <label class="block mb-2 font-semibold">Flavors (qty)</label>
-    <div id="flavors" class="grid grid-cols-2 gap-2 mb-4">
-      <!-- Each input has a data-flavor attribute -->
-      <div>
-        <label for="flavor-oreo">Oreo</label>
-        <input id="flavor-oreo" type="number" min="0" value="0"
-               data-flavor="Oreo"
-               class="flavor w-full p-1 border rounded" />
-      </div>
-      <div>
-        <label for="flavor-nutella">Nutella</label>
-        <input id="flavor-nutella" type="number" min="0" value="0"
-               data-flavor="Nutella"
-               class="flavor w-full p-1 border rounded" />
-      </div>
-      <!-- Add your other flavors similarly -->
-      <div>
-        <label for="flavor-mango-chili">Mango Chili</label>
-        <input id="flavor-mango-chili" type="number" min="0" value="0"
-               data-flavor="Mango Chili"
-               class="flavor w-full p-1 border rounded" />
-      </div>
-      <!-- ... -->
-    </div>
+      <!-- Flavors & Stock -->
+      <label>Flavors (max per stock)</label>
+      <div id="flavorGrid" class="grid"></div>
 
-    <!-- Payment Method -->
-    <label for="paymentMethod" class="block mb-2 font-semibold">Payment Method</label>
-    <select id="paymentMethod" class="w-full p-2 mb-4 border rounded">
-      <option>Apple Pay</option>
-      <option>Cash on Pickup</option>
-    </select>
+      <!-- Special instructions -->
+      <label for="notes">Special Instructions (optional)</label>
+      <textarea id="notes" name="notes" rows="2"></textarea>
 
-    <!-- Place Order -->
-    <button id="submitBtn" type="submit"
-            class="w-full bg-pink-500 hover:bg-pink-600 text-white p-3 rounded-xl font-bold">
-      Place Order
-    </button>
-  </form>
+      <!-- Payment Method -->
+      <label for="payment">Payment</label>
+      <select id="payment" name="payment" required>
+        <option>Cash on Pickup</option>
+        <!-- Apple Pay via Stripe added later -->
+      </select>
 
-  <!-- Confirmation Message -->
-  <div id="confirmation" aria-live="polite"
-       class="hidden mt-6 p-4 bg-green-100 rounded max-w-xl text-center">
-    <h2 class="font-bold text-xl mb-2">Thank you, <span id="confName"></span>!</h2>
-    <p>Your order of <span id="confTotal"></span> bolis is confirmed.</p>
-    <p>Confirmation sent to <span id="confEmail"></span>.</p>
+      <!-- Hidden summary fields for Formspree -->
+      <input type="hidden" name="order_summary" id="order_summary">
+      <input type="hidden" name="order_total"   id="order_total">
+
+      <div class="total" id="displayTotal">Total: $0</div>
+      <button id="submitBtn" type="submit">Place Order</button>
+    </form>
   </div>
 
-  <!-- EmailJS -->
-<script src="https://cdn.emailjs.com/sdk/2.3.2/email.min.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM loaded');
-    emailjs.init('jNjnwDTehjtDEem4i');
-    console.log('EmailJS initialized');
-
-    const form      = document.getElementById('orderForm');
-    const submitBtn = document.getElementById('submitBtn');
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      console.log('Submit handler triggered');
-
-      // Basic sanity check: do we have name/email values?
-      const name  = form.customerName.value;
-      const email = form.customerEmail.value;
-      console.log({ name, email });
-
-      submitBtn.disabled = true;
-      // ...rest of your logic...
-    });
-  });
-</script>
-  
+  <script src="js/app.js"></script>
 </body>
 </html>
