@@ -5,15 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Bolis Elk Grove Orders</title>
   <style>
-    body { font-family:sans-serif; background:#f8f4f0; padding:1rem; }
-    .container { max-width:480px; margin:auto; background:#fff; padding:1.5rem; border-radius:8px; }
-    h1 { text-align:center; color:#e63946; }
-    label { display:block; margin:0.5rem 0 0.25rem; }
-    input, select, button, textarea { width:100%; padding:0.5rem; margin-bottom:0.75rem; border:1px solid #ccc; border-radius:4px; }
-    .grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; }
-    .total { font-weight:bold; text-align:right; margin:1rem 0; }
-    button { background:#e63946; color:#fff; border:none; cursor:pointer; }
-    button:disabled { opacity:0.6; cursor:not-allowed; }
+    body { font-family:sans-serif; background:#f8f4f0; padding:1rem }
+    .container { max-width:480px; margin:auto; background:#fff; padding:1.5rem; border-radius:8px }
+    h1 { text-align:center; color:#e63946 }
+    label { display:block; margin:0.5rem 0 0.25rem }
+    input, select, button, textarea { width:100%; padding:0.5rem; margin-bottom:0.75rem; border:1px solid #ccc; border-radius:4px }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:0.5rem; margin-bottom:1rem }
+    .total { font-weight:bold; text-align:right; margin-bottom:1rem }
+    button { background:#e63946; color:#fff; border:none; cursor:pointer }
+    button:disabled { opacity:0.6; cursor:not-allowed }
   </style>
 </head>
 <body>
@@ -21,7 +21,7 @@
   <div class="container">
     <h1>🍧 Bolis Pickup</h1>
 
-    <form id="orderForm" action="https://formspree.io/f/mwpqdazz" method="POST">
+    <form id="orderForm" action="https://formspree.io/f/xyzabc" method="POST">
       <!-- Customer Info -->
       <label for="name">Name</label>
       <input id="name" name="name" type="text" required>
@@ -29,25 +29,24 @@
       <label for="contact">Phone or Email</label>
       <input id="contact" name="contact" type="text" required>
 
-      <label for="slot">Pickup Slot (6 AM – 11 PM)</label>
+      <label for="slot">Pickup Slot (6 AM–11 PM)</label>
       <input id="slot" name="slot" type="time" min="06:00" max="23:00" required>
 
-      <!-- Flavors & Stock -->
-      <label>Flavors (max per stock)</label>
+      <!-- Flavor Inputs -->
+      <label>Flavors (up to stock)</label>
       <div id="flavorGrid" class="grid"></div>
 
       <!-- Special instructions -->
       <label for="notes">Special Instructions (optional)</label>
       <textarea id="notes" name="notes" rows="2"></textarea>
 
-      <!-- Payment Method -->
-      <label for="payment">Payment</label>
+      <label for="payment">Payment Method</label>
       <select id="payment" name="payment" required>
         <option>Cash on Pickup</option>
-        <!-- Apple Pay via Stripe added later -->
+        <!-- Apple Pay will come later -->
       </select>
 
-      <!-- Hidden summary fields for Formspree -->
+      <!-- Hidden fields for summary & total -->
       <input type="hidden" name="order_summary" id="order_summary">
       <input type="hidden" name="order_total"   id="order_total">
 
